@@ -56,9 +56,8 @@ namespace CSGO_AD_Tracker_Forms_net5
 
         private LinkedList<MouseEventData> historicalMouseEventData = new();
 
-        private const int IntervalMs = 20;
-        private const long IntervalTicks = IntervalMs * 10000;
-        private Timer processEventTimer = new(IntervalMs);
+        private const int IntervalMs = 10;
+        private readonly Timer processEventTimer = new(IntervalMs);
 
         public event AddPointHandler OnPointAdd;
 
@@ -76,27 +75,52 @@ namespace CSGO_AD_Tracker_Forms_net5
 
         private void processBatch(Object source, ElapsedEventArgs e)
         {
-            long startTime;
-            if (historicalMouseEventData.Last != null) startTime = historicalMouseEventData.Last.Value.ticks;
-            else
-            {
-                OnPointAdd?.Invoke(this, new AddPointArgs(0));
-                return;
-            }
-
-            LinkedListNode<MouseEventData> currentNode = historicalMouseEventData.Last;
             int sum = 0;
             // Go over the nodes until the start time node's tick value is greater than the equation below. This is:
             //  The interval in ticks divided by the number of batches, or the number of ticks per batch
             //  Then, this is multiplied by i to get the number of ticks from start this batch should go to
             //  Finally, this is offset by startTime to get the correct max value of this batch.
             // These nodes are then dumped into sum and then removed from the list, and the current node is incremented.
-            long intervalEndTimeTicks = startTime + IntervalTicks;
-            while (currentNode != null && currentNode.Value.ticks <= intervalEndTimeTicks)
+            LinkedListNode<MouseEventData> currentNode = historicalMouseEventData.First;
+            while (currentNode?.Next != null && currentNode != historicalMouseEventData.Last)
             {
-                sum = currentNode.Value.movementEntry + sum;
-                historicalMouseEventData.RemoveLast();
-                currentNode = historicalMouseEventData.Last;
+                sum += (currentNode.Value.movementEntry + currentNode.Next.Value.movementEntry)/2;
+                currentNode = currentNode.Next;
+                
+            }
+            historicalMouseEventData.Clear();
+
+            bool[] keyStatuses = KeyboardData.Instance.GetKeyStatuses;
+            
+            // Good
+            switch (sum)
+            {
+                // Moving left
+                case > 0:
+                    // A is pressed
+                    if (keyStatuses[1])
+                    {
+                    }
+                    else
+                    {
+                        Console.WriteLine("BAD SURFER A");
+                    }
+                    break;
+                // Moving right
+                case < 0:
+                    if (keyStatuses[3])
+                    {
+                    }
+                    else
+                    {
+                        Console.WriteLine("BAD SURFER D");
+                    }
+                    break;
+                    
+            }
+            if (sum > 0 && KeyboardData.Instance.CheckKeyStatus(CsgoKeys.A))
+            {
+                
             }
 
             OnPointAdd?.Invoke(this, new AddPointArgs(sum));

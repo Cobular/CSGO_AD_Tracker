@@ -67,13 +67,11 @@ namespace CSGO_AD_Tracker_Forms_net5
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
             _keyboardData.UpdateKeyStatus((CsgoKeys) e.KeyCode, true);
-            Console.WriteLine($"KeyDown  \t\t [{string.Join(",", _keyboardData.GetKeyStatuses)}]\n");
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
             _keyboardData.UpdateKeyStatus((CsgoKeys) e.KeyCode, false);
-            Console.WriteLine($"KeyUp  \t\t [{string.Join(",", _keyboardData.GetKeyStatuses)}]\n");
         }
 
         private void HookManager_MouseMove(object sender, MouseEventArgs e)

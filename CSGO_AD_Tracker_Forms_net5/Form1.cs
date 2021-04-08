@@ -36,6 +36,7 @@ namespace CSGO_AD_Tracker_Forms_net5
         }
 
 
+
         public void Subscribe()
         {
             // Note: for the application hook, use the Hook.AppEvents() instead
@@ -44,6 +45,7 @@ namespace CSGO_AD_Tracker_Forms_net5
             _mGlobalHook.KeyDown += OnKeyDown;
             _mGlobalHook.KeyUp += OnKeyUp;
             _mGlobalHook.MouseMove += HookManager_MouseMove;
+            MouseVelocityNormalizer.Instance.OnPointAdd += addPoint;
         }
 
         private void Unsubscribe()
@@ -52,6 +54,13 @@ namespace CSGO_AD_Tracker_Forms_net5
             _mGlobalHook.KeyDown -= OnKeyDown;
             _mGlobalHook.KeyUp -= OnKeyUp;
             _mGlobalHook.MouseMove -= HookManager_MouseMove;
+            MouseVelocityNormalizer.Instance.OnPointAdd -= addPoint;
+        }
+        
+        
+        private void addPoint(object source, AddPointArgs e)
+        {
+            Console.WriteLine(e.GetSum());
         }
 
 

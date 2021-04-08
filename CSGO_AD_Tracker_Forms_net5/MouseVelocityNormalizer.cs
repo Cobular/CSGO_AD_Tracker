@@ -6,6 +6,23 @@ using Microsoft.VisualBasic.Devices;
 
 namespace CSGO_AD_Tracker_Forms_net5
 {
+    public delegate void AddPointHandler(object source, AddPointArgs e);
+
+    public class AddPointArgs : EventArgs
+    {
+        private int sum;
+
+        public AddPointArgs(int sum)
+        {
+            this.sum = sum;
+        }
+
+        public int GetSum()
+        {
+            return sum;
+        }
+    }
+
     public struct MouseEventData
     {
         public int movementEntry;
@@ -38,13 +55,12 @@ namespace CSGO_AD_Tracker_Forms_net5
         public static MouseVelocityNormalizer Instance => Lazy.Value;
 
         private LinkedList<MouseEventData> historicalMouseEventData = new();
-        private LinkedList<float> normalizedMouseEventData_10ms = new();
 
-        private const int IntervalMs = 100;
+        private const int IntervalMs = 20;
         private const long IntervalTicks = IntervalMs * 10000;
         private Timer processEventTimer = new(IntervalMs);
 
-        private const int NumBatches = 10;
+        public event AddPointHandler OnPointAdd;
 
         private MouseVelocityNormalizer()
         {
@@ -64,32 +80,26 @@ namespace CSGO_AD_Tracker_Forms_net5
             if (historicalMouseEventData.Last != null) startTime = historicalMouseEventData.Last.Value.ticks;
             else
             {
-                for (int i = 0; i < NumBatches; i++)
-                    normalizedMouseEventData_10ms.AddFirst(0);
+                OnPointAdd?.Invoke(this, new AddPointArgs(0));
                 return;
             }
 
             LinkedListNode<MouseEventData> currentNode = historicalMouseEventData.Last;
-            // Split the data up into NumBatches batches for normalization
-            for (int i = 0; i < NumBatches; i++)
+            int sum = 0;
+            // Go over the nodes until the start time node's tick value is greater than the equation below. This is:
+            //  The interval in ticks divided by the number of batches, or the number of ticks per batch
+            //  Then, this is multiplied by i to get the number of ticks from start this batch should go to
+            //  Finally, this is offset by startTime to get the correct max value of this batch.
+            // These nodes are then dumped into sum and then removed from the list, and the current node is incremented.
+            long intervalEndTimeTicks = startTime + IntervalTicks;
+            while (currentNode != null && currentNode.Value.ticks <= intervalEndTimeTicks)
             {
-                int sum = 0;
-                // Go over the nodes until the start time node's tick value is greater than the equation below. This is:
-                //  The interval in ticks divided by the number of batches, or the number of ticks per batch
-                //  Then, this is multiplied by i to get the number of ticks from start this batch should go to
-                //  Finally, this is offset by startTime to get the correct max value of this batch.
-                // These nodes are then dumped into sum and then removed from the list, and the current node is incremented.
-                long intervalEndTimeTicks = startTime + ((IntervalTicks / NumBatches) * i);
-                while (currentNode != null && currentNode.Value.ticks <= intervalEndTimeTicks)
-                {
-                    sum = currentNode.Value.movementEntry + sum;
-                    historicalMouseEventData.RemoveLast();
-                    currentNode = historicalMouseEventData.Last;
-                }
-                normalizedMouseEventData_10ms.AddFirst(sum);
+                sum = currentNode.Value.movementEntry + sum;
+                historicalMouseEventData.RemoveLast();
+                currentNode = historicalMouseEventData.Last;
             }
-            
-            Console.WriteLine($"{historicalMouseEventData.Count}");
+
+            OnPointAdd?.Invoke(this, new AddPointArgs(sum));
         }
     }
 }

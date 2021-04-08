@@ -8,6 +8,8 @@ namespace CSGO_AD_Tracker_Forms_net5
 {
     public delegate void AdViolationHandler(object source, AdViolationArgs e);
 
+    public delegate void VelocityChangeHandler(object source, VelocityChangeArgs e);
+
     public class AdViolationArgs : EventArgs
     {
         // -1 is left, 1 is right
@@ -23,7 +25,6 @@ namespace CSGO_AD_Tracker_Forms_net5
             return _direction;
         }
     }
-
     public delegate void AddPointHandler(object source, AddPointArgs e);
 
     public class AddPointArgs : EventArgs
@@ -40,6 +41,22 @@ namespace CSGO_AD_Tracker_Forms_net5
             return sum;
         }
     }
+    public class VelocityChangeArgs : EventArgs
+    {
+        // -1 is left, 1 is right
+        private readonly int _direction;
+
+        public VelocityChangeArgs(int direction)
+        {
+            _direction = direction;
+        }
+
+        public int GetDir()
+        {
+            return _direction;
+        }
+    }
+
 
     public readonly struct MouseEventData
     {
@@ -65,11 +82,16 @@ namespace CSGO_AD_Tracker_Forms_net5
 
         private LinkedList<MouseEventData> historicalMouseEventData = new();
 
-        private const int IntervalMs = 10;
+        private const int IntervalMs = 1;
+        private float previousVelocity = 0;
+        public float Velocity = 0;
+        public bool[] keyStatuses;
         private readonly Timer processEventTimer = new(IntervalMs);
 
         public event AddPointHandler OnPointAdd;
         public event AdViolationHandler OnADViolation;
+        public event VelocityChangeHandler onVelocityChange;
+        
 
         private MouseVelocityNormalizer()
         {
@@ -101,31 +123,51 @@ namespace CSGO_AD_Tracker_Forms_net5
 
             historicalMouseEventData = new LinkedList<MouseEventData>();
 
-            bool[] keyStatuses = KeyboardData.Instance.GetKeyStatuses;
-            float vel;
+            keyStatuses = KeyboardData.Instance.GetKeyStatuses;
+            
             if (len != 0)
-                vel = sum / (float) len;
-            else vel = 0;
+                Velocity = sum / (float) len;
+            else Velocity = 0;
 
-
-            // Good
-            switch (vel)
+            if (!previousVelocity.Equals(Math.Sign(Velocity)) && (keyStatuses[1] || keyStatuses[3]))
             {
-                // Moving left
-                case > 0:
-                    // A is not pressed
-                    if (!keyStatuses[1])
-                        OnADViolation?.Invoke(this, new AdViolationArgs(-1));
-                    break;
-                // Moving right
-                case < 0:
-                    // D is not pressed
-                    if (!keyStatuses[3])
-                        OnADViolation?.Invoke(this, new AdViolationArgs(1));
-                    break;
+                switch (Velocity)
+                {
+                    case > 0:
+                    // Moving left
+                        onVelocityChange?.Invoke(this, new VelocityChangeArgs(-1));
+                        break; 
+                    // Moving right
+                    case < 0:
+                        onVelocityChange?.Invoke(this, new VelocityChangeArgs(1));
+                        break;
+                }
             }
 
-            OnPointAdd?.Invoke(this, new AddPointArgs(vel));
+            previousVelocity = Math.Sign(Velocity);
+
+
+            if (keyStatuses[1] || keyStatuses[3])
+            {
+                // Good
+                switch (Velocity)
+                {
+                    // Moving left
+                    case > 0:
+                        // A is not pressed
+                        if (!keyStatuses[1])
+                            OnADViolation?.Invoke(this, new AdViolationArgs(-1));
+                        break;
+                    // Moving right
+                    case < 0:
+                        // D is not pressed
+                        if (!keyStatuses[3])
+                            OnADViolation?.Invoke(this, new AdViolationArgs(1));
+                        break;
+                }
+            }
+
+            OnPointAdd?.Invoke(this, new AddPointArgs(Velocity));
         }
     }
 }

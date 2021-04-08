@@ -21,13 +21,23 @@ namespace CSGO_AD_Tracker_Forms_net5
         private KeyboardData _keyboardData;
         private Int32 LastMouseXCoord = 0;
 
+        private int good;
+        private int bad;
+
+        
+        private System.Timers.Timer timer;
+
         public Form1()
         {
+            timer = new System.Timers.Timer(1);
+            timer.AutoReset = true;
+            timer.Elapsed += SyncCheck;
+            timer.Enabled = true;
             _keyboardData = KeyboardData.Instance;
             Subscribe();
             InitializeComponent();
             FormClosing += Form1_FormClosing;
-            firstGraph = new FlowingGraph(false, this, new Point(50, 50), new Size(600, 300), Color.Black, Color.Cyan, 4.0f, 200, 5, 0, 10);
+            firstGraph = new FlowingGraph(false, this, new Point(50, 50), new Size(600, 300), Color.Black, Color.Cyan, 8.0f, 200, 5, 0, 1);
         }
 
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -47,6 +57,7 @@ namespace CSGO_AD_Tracker_Forms_net5
             _mGlobalHook.MouseMove += HookManager_MouseMove;
             MouseVelocityNormalizer.Instance.OnPointAdd += addPoint;
             MouseVelocityNormalizer.Instance.OnADViolation += AdViolation;
+            MouseVelocityNormalizer.Instance.onVelocityChange += VelocityChange;
         }
 
         private void Unsubscribe()
@@ -59,20 +70,63 @@ namespace CSGO_AD_Tracker_Forms_net5
             MouseVelocityNormalizer.Instance.OnADViolation -= AdViolation;
         }
 
-        private void AdViolation(object source, AdViolationArgs e)
+
+        private void SyncCheck(object source, ElapsedEventArgs e)
         {
-            Console.WriteLine($"AD Violation in direction {e.GetDir()}");
+            var vel = MouseVelocityNormalizer.Instance.Velocity;
+            var a = MouseVelocityNormalizer.Instance.keyStatuses[1];
+            var d = MouseVelocityNormalizer.Instance.keyStatuses[3];
+            var dir = Math.Sign(vel);
+            // -1 = left, 1 = right
+
+            switch (dir)
+            {
+                case 1:
+                {
+                    if (a)
+                        good += 1;
+                    if (d)
+                    {
+                        bad += 1;
+                        good += 1;
+                    }
+
+                    break;
+                }
+                case -1:
+                {
+                    if (a)
+                    {
+                        bad += 1;
+                        good += 1;
+                    }
+                    
+                    if (d)
+                        good += 1;
+                    break;
+                }
+            }
+
+            Console.WriteLine((good - bad) / (float) good);
         }
+        
+        private void AdViolation(object source, AdViolationArgs e) { }
+        private void VelocityChange(object o, VelocityChangeArgs e) { }
+        
         
         private void addPoint(object source, AddPointArgs e)
         {
-            firstGraph.addPoint(e.GetSum());
+            firstGraph.addPoint(e.GetSum() * 10.0f);
         }
 
 
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
             _keyboardData.UpdateKeyStatus((CsgoKeys) e.KeyCode, true);
+            if (MouseVelocityNormalizer.Instance.Velocity != 0)
+            {
+                //AdViolation(this, new AdViolationArgs((int) MouseVelocityNormalizer.Instance.Velocity));
+            }
         }
 
         private void OnKeyUp(object sender, KeyEventArgs e)

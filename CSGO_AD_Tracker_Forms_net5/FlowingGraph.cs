@@ -139,7 +139,7 @@ namespace CSGO_AD_Tracker_Forms_net5
             box.Invalidate();
         }
 
-        private void timerUpdate(Object sender, ElapsedEventArgs e)
+        private void timerUpdate(object sender, ElapsedEventArgs e)
         {
             if (debug) addPoint(generatePoint());
             updateGraph();
@@ -147,18 +147,22 @@ namespace CSGO_AD_Tracker_Forms_net5
 
         private void paintBox(object sender, PaintEventArgs e)
         {
-            Graphics g = e.Graphics;
+            var g = e.Graphics;
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-            Pen test = new Pen(lineColor) {Width = thickness};
+            var pen = new Pen(lineColor) {Width = thickness};
 
-            var workingNode = points.First;
-            while (workingNode?.Next != null && workingNode != points.Last)
-            {
-                g.DrawLine(test, workingNode.Value, workingNode.Next.Value);
-                workingNode = workingNode.Next;
-            }
+            // var workingNode = points.First;
+            // while (workingNode?.Next != null && workingNode != points.Last)
+            // {
+            //     g.DrawLine(pen, workingNode.Value, workingNode.Next.Value);
+            //     workingNode = workingNode.Next;
+            // }
 
-            test.Dispose();
+            var arr = new PointF[999];
+            points.CopyTo(arr, 0);
+            g.DrawCurve(pen, arr, 0.1f);
+
+            pen.Dispose();
         }
     }
 }

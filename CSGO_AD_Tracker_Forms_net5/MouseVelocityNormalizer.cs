@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
@@ -6,44 +6,53 @@ using Microsoft.VisualBasic.Devices;
 
 namespace CSGO_AD_Tracker_Forms_net5
 {
+    public delegate void AdViolationHandler(object source, AdViolationArgs e);
+
+    public class AdViolationArgs : EventArgs
+    {
+        // -1 is left, 1 is right
+        private readonly int _direction;
+
+        public AdViolationArgs(int direction)
+        {
+            _direction = direction;
+        }
+
+        public int GetDir()
+        {
+            return _direction;
+        }
+    }
+
     public delegate void AddPointHandler(object source, AddPointArgs e);
 
     public class AddPointArgs : EventArgs
     {
-        private int sum;
+        private float sum;
 
-        public AddPointArgs(int sum)
+        public AddPointArgs(float sum)
         {
             this.sum = sum;
         }
 
-        public int GetSum()
+        public float GetSum()
         {
             return sum;
         }
     }
 
-    public struct MouseEventData
+    public readonly struct MouseEventData
     {
-        public int movementEntry;
-
-        public long ticks;
-
+        public readonly int MovementEntry;
+        
         public MouseEventData(int movementEntry)
-        {
-            ticks = DateTime.Now.Ticks;
-            this.movementEntry = movementEntry;
-        }
-
-        public MouseEventData(int movementEntry, long ticks)
-        {
-            this.ticks = ticks;
-            this.movementEntry = movementEntry;
+        { 
+            MovementEntry = movementEntry;
         }
 
         public override string ToString()
         {
-            return movementEntry.ToString();
+            return MovementEntry.ToString();
         }
     }
 
@@ -60,6 +69,7 @@ namespace CSGO_AD_Tracker_Forms_net5
         private readonly Timer processEventTimer = new(IntervalMs);
 
         public event AddPointHandler OnPointAdd;
+        public event AdViolationHandler OnADViolation;
 
         private MouseVelocityNormalizer()
         {
@@ -85,41 +95,33 @@ namespace CSGO_AD_Tracker_Forms_net5
             LinkedListNode<MouseEventData> currentNode = historicalMouseEventData.First;
             while (currentNode?.Next != null && currentNode != historicalMouseEventData.Last)
             {
-                sum += (currentNode.Value.movementEntry + currentNode.Next.Value.movementEntry) / 2;
+                sum += (currentNode.Value.MovementEntry + currentNode.Next.Value.MovementEntry) / 2;
                 currentNode = currentNode.Next;
             }
 
-            historicalMouseEventData.Clear();
+            historicalMouseEventData = new LinkedList<MouseEventData>();
 
             bool[] keyStatuses = KeyboardData.Instance.GetKeyStatuses;
-            int vel = sum / len;
-            Console.WriteLine($"Sum: {sum} Len: {len} Vel: {vel}");
+            float vel;
+            if (len != 0)
+                vel = sum / (float) len;
+            else vel = 0;
+
 
             // Good
             switch (vel)
             {
                 // Moving left
                 case > 0:
-                    // A is pressed
-                    if (keyStatuses[1])
-                    {
-                    }
-                    else
-                    {
-                        // Console.WriteLine("BAD SURFER A");
-                    }
-
+                    // A is not pressed
+                    if (!keyStatuses[1])
+                        OnADViolation?.Invoke(this, new AdViolationArgs(-1));
                     break;
                 // Moving right
                 case < 0:
-                    if (keyStatuses[3])
-                    {
-                    }
-                    else
-                    {
-                        // Console.WriteLine("BAD SURFER D");
-                    }
-
+                    // D is not pressed
+                    if (!keyStatuses[3])
+                        OnADViolation?.Invoke(this, new AdViolationArgs(1));
                     break;
             }
 

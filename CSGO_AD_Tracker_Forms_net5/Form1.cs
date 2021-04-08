@@ -46,6 +46,7 @@ namespace CSGO_AD_Tracker_Forms_net5
             _mGlobalHook.KeyUp += OnKeyUp;
             _mGlobalHook.MouseMove += HookManager_MouseMove;
             MouseVelocityNormalizer.Instance.OnPointAdd += addPoint;
+            MouseVelocityNormalizer.Instance.OnADViolation += AdViolation;
         }
 
         private void Unsubscribe()
@@ -55,12 +56,17 @@ namespace CSGO_AD_Tracker_Forms_net5
             _mGlobalHook.KeyUp -= OnKeyUp;
             _mGlobalHook.MouseMove -= HookManager_MouseMove;
             MouseVelocityNormalizer.Instance.OnPointAdd -= addPoint;
+            MouseVelocityNormalizer.Instance.OnADViolation -= AdViolation;
         }
-        
+
+        private void AdViolation(object source, AdViolationArgs e)
+        {
+            Console.WriteLine($"AD Violation in direction {e.GetDir()}");
+        }
         
         private void addPoint(object source, AddPointArgs e)
         {
-            firstGraph.addPoint(e.GetSum() / 5.0f);
+            firstGraph.addPoint(e.GetSum());
         }
 
 

@@ -1,0 +1,13 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/modules.xml
+/projectSettingsUpdater.xml
+/contentModel.xml
+/.idea.CSGO_AD_Tracker_Forms_net5.iml
+# Datasource local storage ignored files
+/../../../../../../../../:\Users\jdc10\RiderProjects\CSGO_AD_Tracker_Forms_net5\.idea\.idea.CSGO_AD_Tracker_Forms_net5\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/

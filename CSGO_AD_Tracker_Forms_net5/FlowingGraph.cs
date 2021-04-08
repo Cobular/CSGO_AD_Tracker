@@ -30,6 +30,20 @@ namespace CSGO_AD_Tracker_Forms_net5
         //Timers
         System.Timers.Timer update;
 
+        /// <summary>
+        /// Makes a scrolling graph that looks nice :)
+        /// </summary>
+        /// <param name="debug"> Enables random points spawning to test for crashes </param>
+        /// <param name="form"> The form to draw this element on </param>
+        /// <param name="position"> Where this element is on the form </param>
+        /// <param name="size"> The size of the element </param>
+        /// <param name="backColor"> The background color of the element </param>
+        /// <param name="lineColor"> The color of the line of the element </param>
+        /// <param name="penThickness"> The thickness of the graph line </param>
+        /// <param name="elementCount"> The amount of elements to store </param>
+        /// <param name="pointSpread"> The amount of space between each point, effectively scroll speed </param>
+        /// <param name="bufferDistance"> The spawning offset from the right of the element </param>
+        /// <param name="refreshRate"> How fast the element update loop runs, in ms </param>
         public FlowingGraph(bool debug, Form form, Point position, Size size, Color backColor, Color lineColor,
             float penThickness, int elementCount, int pointSpread, int bufferDistance, int refreshRate)
         {

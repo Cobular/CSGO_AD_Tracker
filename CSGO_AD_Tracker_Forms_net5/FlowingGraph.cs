@@ -114,12 +114,12 @@ namespace CSGO_AD_Tracker_Forms_net5
 
         private void updateGraph()
         {
-            LinkedListNode<PointF> workingNode = points.Last;
+            LinkedListNode<PointF> workingNode = points.First;
 
-            while (workingNode != null && workingNode != points.First)
+            while (workingNode != null && workingNode != points.Last)
             {
                 workingNode.Value = new PointF(workingNode.Value.X - pointSpread, workingNode.Value.Y);
-                workingNode = workingNode.Next;
+                if (workingNode.Next != null) workingNode = workingNode.Next;
             }
 
             box.Invalidate();
@@ -137,10 +137,11 @@ namespace CSGO_AD_Tracker_Forms_net5
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
             Pen test = new Pen(lineColor) {Width = thickness};
 
-            var workingNode = points.Last;
-            while (workingNode?.Next != null && workingNode != points.First)
+            var workingNode = points.First;
+            while (workingNode?.Next != null && workingNode != points.Last)
             {
                 g.DrawLine(test, workingNode.Value, workingNode.Next.Value);
+                workingNode = workingNode.Next;
             }
 
             test.Dispose();

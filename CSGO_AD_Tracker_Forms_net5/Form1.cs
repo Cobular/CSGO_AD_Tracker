@@ -16,13 +16,10 @@ namespace CSGO_AD_Tracker_Forms_net5
     {
         private IKeyboardMouseEvents _mGlobalHook;
         private KeyboardData _keyboardData;
-        private Int32 mouseEvents = 0;
-        private System.Timers.Timer aTimer;
-
+        private Int32 LastMouseXCoord = 0;
 
         public Form1()
         {
-            aTimer = new System.Timers.Timer(2000);
             _keyboardData = KeyboardData.Instance;
             Subscribe();
             InitializeComponent();
@@ -43,9 +40,6 @@ namespace CSGO_AD_Tracker_Forms_net5
             _mGlobalHook.KeyDown += OnKeyDown;
             _mGlobalHook.KeyUp += OnKeyUp;
             _mGlobalHook.MouseMove += HookManager_MouseMove;
-
-
-            // m_GlobalHook.KeyPress += HookManager_KeyPress;
         }
 
         private void Unsubscribe()
@@ -71,31 +65,9 @@ namespace CSGO_AD_Tracker_Forms_net5
 
         private void HookManager_MouseMove(object sender, MouseEventArgs e)
         {
-            // Console.WriteLine($"x={e.X:0000}; y={e.Y:0000}");
-            if (aTimer.Enabled == false)
-            {
-                Console.WriteLine("Starting Timer...");
-                SetTimer();
-            }
-
-            mouseEvents++;
-        }
-
-        private void SetTimer()
-        {
-            Console.WriteLine("StaringTimer");
-            // Create a timer with a two second interval.
-            aTimer = new System.Timers.Timer(2000);
-            // Hook up the Elapsed event for the timer. 
-            aTimer.Elapsed += OnTimedEvent;
-            aTimer.AutoReset = true;
-            aTimer.Enabled = true;
-        }
-
-        private void OnTimedEvent(Object source, ElapsedEventArgs e)
-        {
-            Console.WriteLine($"{mouseEvents / 2}");
-            mouseEvents = 0;
+            // Console.Write($"{LastMouseXCoord-e.X}|");
+            MouseVelocityNormalizer.Instance.AddMouseEventData(new MouseEventData(LastMouseXCoord-e.X));
+            LastMouseXCoord = e.X;
         }
     }
 }

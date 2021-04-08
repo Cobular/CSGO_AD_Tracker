@@ -12,7 +12,7 @@ namespace CSGO_AD_Tracker_Forms_net5
         //Point information
         int pointArraySize;
         int pointSpread;
-        IndexedList<PointF> pointQueue = new IndexedList<PointF>();
+        LinkedList<PointF> points = new LinkedList<PointF>();
 
         //Debug
         Random debugRandom = new Random();
@@ -30,7 +30,8 @@ namespace CSGO_AD_Tracker_Forms_net5
         //Timers
         System.Timers.Timer update;
 
-        public FlowingGraph(bool debug, Form form, Point position, Size size, Color backColor, Color lineColor, float penThickness, int elementCount, int pointSpread, int bufferDistance, int refreshRate)
+        public FlowingGraph(bool debug, Form form, Point position, Size size, Color backColor, Color lineColor,
+            float penThickness, int elementCount, int pointSpread, int bufferDistance, int refreshRate)
         {
             box = new PictureBox()
             {
@@ -49,7 +50,7 @@ namespace CSGO_AD_Tracker_Forms_net5
 
             graphX = box.Width + pointSpread - bufferDistance;
 
-            pointQueue.Add(new PointF(graphX, (float)((size.Height*0.5))));
+            points.AddFirst(new PointF(graphX, (float) ((size.Height * 0.5))));
             for (int i = 0; i < pointArraySize - 1; i++)
                 addPoint(generatePoint());
 
@@ -64,112 +65,90 @@ namespace CSGO_AD_Tracker_Forms_net5
 
         public void updateBox(Size size, Point position, Color backColor)
         {
-            if (size != null) 
-            { 
+            if (size != null)
+            {
                 box.Size = size;
                 this.boxSize = box.Size;
             }
-            if (position != null) 
-            { 
+
+            if (position != null)
+            {
                 box.Location = position;
                 this.boxPosition = new Point(box.Left, box.Top);
             }
-            if (backColor != null) { box.BackColor = boxColor = backColor; }
+
+            if (backColor != null)
+            {
+                box.BackColor = boxColor = backColor;
+            }
         }
-        public Point getBoxLocation() { return boxPosition;  }
-        public Size getBoxSize() { return boxSize;  }
-        public void addPoint(PointF point)
+
+        public Point getBoxLocation()
         {
-            pointQueue.Add(point);
-            if (pointQueue.Count > pointArraySize)
-                _ = pointQueue.Remove();
+            return boxPosition;
         }
+
+        public Size getBoxSize()
+        {
+            return boxSize;
+        }
+
+        private void addPoint(PointF point)
+        {
+            points.AddFirst(point);
+            if (points.Count > pointArraySize)
+                points.RemoveLast();
+        }
+
         public void addPoint(float point)
         {
-            pointQueue.Add(new PointF(graphX, point));
-            if (pointQueue.Count > pointArraySize)
-                _ = pointQueue.Remove();
+            points.AddFirst(new PointF(graphX, point));
+            if (points.Count > pointArraySize)
+                points.RemoveLast();
         }
 
         //private methods
         private PointF generatePoint()
         {
-            return new PointF(graphX, pointQueue.list.Last.Value.Y + debugRandom.Next(-5, 5));
+            return new PointF(graphX, points.Last.Value.Y + debugRandom.Next(-5, 5));
         }
+
         private void updateGraph()
         {
-            var workingNode = pointQueue.list.First;
+            LinkedListNode<PointF> workingNode = points.Last;
 
-            for (int i = 0; i < pointArraySize - 1; i++)
+            while (workingNode != null && workingNode != points.First)
             {
-                try
-                {
-                    pointQueue.list.AddBefore(workingNode, new PointF(workingNode.Value.X - pointSpread, workingNode.Value.Y));
-                    workingNode = workingNode.Previous;
-                    if (workingNode.List.Equals(pointQueue.list) && workingNode.Next.List.Equals(pointQueue.list))
-                    {
-                        pointQueue.list.Remove(workingNode.Next);
-                        workingNode = workingNode.Next;
-                    }
-                } catch (System.InvalidOperationException)
-                {
-                    continue;
-                }
+                workingNode.Value = new PointF(workingNode.Value.X - pointSpread, workingNode.Value.Y);
+                workingNode = workingNode.Next;
             }
 
             box.Invalidate();
         }
+
         private void timerUpdate(Object sender, ElapsedEventArgs e)
         {
-            
             if (debug) addPoint(generatePoint());
             updateGraph();
         }
+
         private void paintBox(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-            Pen test = new Pen(lineColor);
-            test.Width = thickness;
-            var workingNode = pointQueue.list.First;
+            Pen test = new Pen(lineColor) {Width = thickness};
+            var workingNode = points.First;
 
             if (workingNode != null && workingNode.Next != null)
             {
                 for (int i = 0; i < pointArraySize - 1; i++)
                 {
-                    g.DrawLine(test, workingNode.Value, workingNode.Next.Value);
+                    g.DrawLine(test, (PointF) workingNode.Value, workingNode.Next.Value);
                     workingNode = workingNode.Next;
                 }
             }
 
             test.Dispose();
-        }
-
-    }
-
-    class IndexedList<T>
-    {
-        public LinkedList<T> list;
-        public int Count
-        {
-            get => list.Count;
-        }
-
-        public IndexedList()
-        {
-            list = new LinkedList<T>();
-        }
-
-        public void Add(T element)
-        {
-            list.AddFirst(element);
-        }
-
-        public T Remove()
-        {
-            T returnVal = list.Last.Value;
-            list.RemoveLast();
-            return returnVal;
         }
     }
 }

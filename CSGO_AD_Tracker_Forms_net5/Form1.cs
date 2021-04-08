@@ -27,7 +27,7 @@ namespace CSGO_AD_Tracker_Forms_net5
             Subscribe();
             InitializeComponent();
             FormClosing += Form1_FormClosing;
-            firstGraph = new FlowingGraph(false, this, new Point(50, 50), new Size(600, 300), Color.Black, Color.Cyan, 8.0f, 200, 10, 5, 10);
+            firstGraph = new FlowingGraph(false, this, new Point(50, 50), new Size(600, 300), Color.Black, Color.Cyan, 4.0f, 200, 4, 5, 10);
         }
 
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -60,7 +60,7 @@ namespace CSGO_AD_Tracker_Forms_net5
         
         private void addPoint(object source, AddPointArgs e)
         {
-            firstGraph.addPoint(e.GetSum() / 20.0f);
+            firstGraph.addPoint(e.GetSum() / 10.0f);
         }
 
 

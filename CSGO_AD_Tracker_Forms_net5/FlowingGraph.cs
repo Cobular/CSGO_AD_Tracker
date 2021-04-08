@@ -101,7 +101,7 @@ namespace CSGO_AD_Tracker_Forms_net5
 
         public void addPoint(float point)
         {
-            points.AddFirst(new PointF(graphX, point));
+            points.AddFirst(new PointF(graphX, (float)(point + box.Height * 0.5))) ;
             if (points.Count > pointArraySize)
                 points.RemoveLast();
         }

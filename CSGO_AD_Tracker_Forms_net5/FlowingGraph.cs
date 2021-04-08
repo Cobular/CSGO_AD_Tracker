@@ -23,13 +23,14 @@ namespace CSGO_AD_Tracker_Forms_net5
         Point boxPosition;
         Size boxSize;
         Color boxColor;
+        Color lineColor;
         float graphX;
         float thickness;
 
         //Timers
         System.Timers.Timer update;
 
-        public FlowingGraph(bool debug, Form form, Point position, Size size, Color backColor, float penThickness, int elementCount, int pointSpread, int bufferDistance, int refreshRate)
+        public FlowingGraph(bool debug, Form form, Point position, Size size, Color backColor, Color lineColor, float penThickness, int elementCount, int pointSpread, int bufferDistance, int refreshRate)
         {
             box = new PictureBox()
             {
@@ -44,6 +45,7 @@ namespace CSGO_AD_Tracker_Forms_net5
             this.debug = debug;
             this.pointSpread = pointSpread;
             this.thickness = penThickness;
+            this.lineColor = lineColor;
 
             graphX = box.Width + pointSpread - bufferDistance;
 
@@ -82,6 +84,12 @@ namespace CSGO_AD_Tracker_Forms_net5
             if (pointQueue.Count > pointArraySize)
                 _ = pointQueue.Remove();
         }
+        public void addPoint(float point)
+        {
+            pointQueue.Add(new PointF(graphX, point));
+            if (pointQueue.Count > pointArraySize)
+                _ = pointQueue.Remove();
+        }
 
         //private methods
         private PointF generatePoint()
@@ -105,7 +113,7 @@ namespace CSGO_AD_Tracker_Forms_net5
                     }
                 } catch (System.InvalidOperationException)
                 {
-
+                    continue;
                 }
             }
 
@@ -120,7 +128,8 @@ namespace CSGO_AD_Tracker_Forms_net5
         private void paintBox(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            Pen test = new Pen(Brushes.DeepSkyBlue);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            Pen test = new Pen(lineColor);
             test.Width = thickness;
             var workingNode = pointQueue.list.First;
 

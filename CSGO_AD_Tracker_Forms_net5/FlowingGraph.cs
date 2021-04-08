@@ -51,8 +51,7 @@ namespace CSGO_AD_Tracker_Forms_net5
             graphX = box.Width + pointSpread - bufferDistance;
 
             points.AddFirst(new PointF(graphX, (float) ((size.Height * 0.5))));
-            for (int i = 0; i < pointArraySize - 1; i++)
-                addPoint(generatePoint());
+            addPoint(generatePoint());
 
             //Timer stuff for updating the graph
             update = new System.Timers.Timer(refreshRate);
@@ -137,15 +136,11 @@ namespace CSGO_AD_Tracker_Forms_net5
             Graphics g = e.Graphics;
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
             Pen test = new Pen(lineColor) {Width = thickness};
-            var workingNode = points.First;
 
-            if (workingNode != null && workingNode.Next != null)
+            var workingNode = points.Last;
+            while (workingNode?.Next != null && workingNode != points.First)
             {
-                for (int i = 0; i < pointArraySize - 1; i++)
-                {
-                    g.DrawLine(test, (PointF) workingNode.Value, workingNode.Next.Value);
-                    workingNode = workingNode.Next;
-                }
+                g.DrawLine(test, workingNode.Value, workingNode.Next.Value);
             }
 
             test.Dispose();

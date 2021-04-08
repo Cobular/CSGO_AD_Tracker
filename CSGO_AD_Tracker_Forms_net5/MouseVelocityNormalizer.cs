@@ -64,10 +64,10 @@ namespace CSGO_AD_Tracker_Forms_net5
             if (historicalMouseEventData.Last != null) startTime = historicalMouseEventData.Last.Value.ticks;
             else
             {
-                Console.WriteLine("No data in pipe to process");
+                for (int i = 0; i < NumBatches; i++)
+                    normalizedMouseEventData_10ms.AddFirst(0);
                 return;
             }
-            Console.WriteLine($"Processing Data.. {startTime}");
 
             LinkedListNode<MouseEventData> currentNode = historicalMouseEventData.Last;
             // Split the data up into NumBatches batches for normalization
@@ -80,24 +80,16 @@ namespace CSGO_AD_Tracker_Forms_net5
                 //  Finally, this is offset by startTime to get the correct max value of this batch.
                 // These nodes are then dumped into sum and then removed from the list, and the current node is incremented.
                 long intervalEndTimeTicks = startTime + ((IntervalTicks / NumBatches) * i);
-                while (currentNode.Value.ticks <= intervalEndTimeTicks)
+                while (currentNode != null && currentNode.Value.ticks <= intervalEndTimeTicks)
                 {
                     sum = currentNode.Value.movementEntry + sum;
-
-                    if (currentNode == null)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        historicalMouseEventData.RemoveLast();
-                        currentNode = historicalMouseEventData.Last;
-                    }
+                    historicalMouseEventData.RemoveLast();
+                    currentNode = historicalMouseEventData.Last;
                 }
                 normalizedMouseEventData_10ms.AddFirst(sum);
             }
             
-            Console.WriteLine($"[{string.Join(",", normalizedMouseEventData_10ms)}]");
+            Console.WriteLine($"{historicalMouseEventData.Count}");
         }
     }
 }

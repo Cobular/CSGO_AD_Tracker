@@ -16,7 +16,9 @@ namespace CSGO_AD_Tracker_Forms_net5
     public partial class Form1 : Form
     {
 
-        FlowingGraph firstGraph;
+        FlowingGraph mouseVelocityGraph;
+        private FancyBar syncBar;
+        
         private IKeyboardMouseEvents _mGlobalHook;
         private KeyboardData _keyboardData;
         private Int32 LastMouseXCoord = 0;
@@ -33,11 +35,17 @@ namespace CSGO_AD_Tracker_Forms_net5
             timer.AutoReset = true;
             timer.Elapsed += SyncCheck;
             timer.Enabled = true;
+            
             _keyboardData = KeyboardData.Instance;
+            
             Subscribe();
             InitializeComponent();
+            
             FormClosing += Form1_FormClosing;
-            firstGraph = new FlowingGraph(false, this, new Point(50, 50), new Size(600, 300), Color.Black, Color.Cyan, 8.0f, 200, 5, 0, 1);
+            
+            
+            mouseVelocityGraph = new FlowingGraph(false, this, new Point(10, 10), new Size(300, 300), Color.Black, Color.Cyan, 8.0f, 100, 5, 0, 1);
+            syncBar = new FancyBar(this, new Point(10, 350), new Size(300, 50), new PointF(0, .33f), new PointF(1f, 1), 0, Color.Black, 100, 99999, 10);
         }
 
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -106,34 +114,27 @@ namespace CSGO_AD_Tracker_Forms_net5
                     break;
                 }
             }
-
-            Console.WriteLine((good - bad) / (float) good);
+            
+            if (good != 0)
+                syncBar.updatePercent((good - bad) / (float) good);
         }
         
         private void AdViolation(object source, AdViolationArgs e) { }
         private void VelocityChange(object o, VelocityChangeArgs e) { }
-        
-        
+
         private void addPoint(object source, AddPointArgs e)
         {
-            firstGraph.addPoint(e.GetSum() * 10.0f);
+            mouseVelocityGraph.addPoint(e.GetSum() * 10.0f);
         }
-
 
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
             _keyboardData.UpdateKeyStatus((CsgoKeys) e.KeyCode, true);
-            if (MouseVelocityNormalizer.Instance.Velocity != 0)
-            {
-                //AdViolation(this, new AdViolationArgs((int) MouseVelocityNormalizer.Instance.Velocity));
-            }
         }
-
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
             _keyboardData.UpdateKeyStatus((CsgoKeys) e.KeyCode, false);
         }
-
         private void HookManager_MouseMove(object sender, MouseEventArgs e)
         {
             // Console.Write($"{LastMouseXCoord-e.X}|");

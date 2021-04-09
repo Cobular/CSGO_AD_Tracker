@@ -160,7 +160,7 @@ namespace CSGO_AD_Tracker_Forms_net5
 
             var arr = new PointF[999];
             points.CopyTo(arr, 0);
-            g.DrawCurve(pen, arr, 0.1f);
+            g.DrawCurve(pen, arr, 0f);
 
             pen.Dispose();
         }
